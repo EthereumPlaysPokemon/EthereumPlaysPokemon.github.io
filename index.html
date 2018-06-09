@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+        <title> Ethereum Plays Pokemon </title>
+
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+        <script type='text/javascript' src='epp.js'></script>
+        <script type='text/javascript'>
+            window.addEventListener('load', function() {
+                var Web3 = require('web3');
+                // Check if Web3 has been injected by the browser (Mist/MetaMask)
+                if (typeof web3 !== 'undefined') {
+                    console.log('Using web3 from browser or plugin')
+                    // Use Mist/MetaMask's provider
+                    web3 = new Web3(web3.currentProvider);
+                } else {
+                    console.log('No ethereum browser found, falling back to local node')
+                    // fallback
+                    web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+                }
+               
+                web3.version.getNetwork((err, netId) => {
+                    switch (netId) {
+                        case "1":
+                            console.log('This is mainnet')
+                            break
+                        case "2":
+                            console.log('This is the deprecated Morden test network.')
+                            break
+                        case "3":
+                            console.log('This is the ropsten test network.')
+                            break
+                        case "4":
+                            console.log('This is the Rinkeby test network.')
+                            break
+                        case "42":
+                            console.log('This is the Kovan test network.')
+                            break
+                        default:
+                            console.log('This is an unknown network.')
+                    }
+                })
+            })
+        </script>
+    </head>
+
+    <body>
+
+        <div class="container">
+
+            <h1>Ethereum Plays Pokemon</h1>
+
+            <p><input id='payment' placeholder=''> </input> microETH (optional, minimum 10 if set)</p>
+
+            <img src="gameboy_cropped.png" usemap="#gameboy-map">
+
+            <map name="gameboy-map">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'up'); return false;" alt="up" title="up" coords="130,60,208,120" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'down'); return false;" alt="down" title="down" coords="130,185,208,245" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'left'); return false;" alt="left" title="left" coords="65,125,130,190" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'right'); return false;" alt="right" title="right" coords="200,125,260,190" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'a'); return false;" alt="a" title="a" coords="620,60,730,170" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'b'); return false;" alt="b" title="b" coords="490,120,600,230" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'select'); return false;" alt="select" title="select" coords="230,280,350,400" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('payment').value, 'start'); return false;" alt="start" title="start" coords="370,280,480,400" shape="rect">
+            </map>
+
+        </div>
+
+    </body>
+</html>
