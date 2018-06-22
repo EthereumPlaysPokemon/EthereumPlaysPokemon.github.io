@@ -101,7 +101,7 @@ function press_button(value, button)
         return
     }
 
-    if (value_wei <= channel_value) {
+    if (Number(value_wei) <= Number(channel_value)) {
         alert("Trying to make a payment for less than the previous one! If you're sure you want to do this, clear cookies and re-try.");
         return
     }
@@ -339,7 +339,7 @@ function checkDepositBalance()
 {
     contract_instance.balanceOf.call(web3.eth.accounts[0], function(error, result) {
         if (!error) {
-            deposit_max = web3.fromWei(result, 'microether');
+            deposit_max = Number(web3.fromWei(result, 'microether'));
             document.getElementById('channel_capacity').textContent = deposit_max;
             document.getElementById('remaining_moves').textContent = deposit_max - web3.fromWei(channel_value, 'microether');
         } else {
