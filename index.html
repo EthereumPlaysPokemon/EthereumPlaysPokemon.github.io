@@ -4,44 +4,47 @@
         <meta content="utf-8" http-equiv="encoding">
         <title> Ethereum Plays Pokemon </title>
 
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+        <script type='text/javascript' src='contract_addr.js'></script>
+        <script type='text/javascript' src='contract_abi.js'></script>
         <script type='text/javascript' src='epp.js'></script>
+
         <script type='text/javascript'>
             window.addEventListener('load', function() {
-                var Web3 = require('web3');
                 // Check if Web3 has been injected by the browser (Mist/MetaMask)
                 if (typeof web3 !== 'undefined') {
-                    console.log('Using web3 from browser or plugin')
+                    console.log('Using web3 from browser or plugin.');
                     // Use Mist/MetaMask's provider
-                    web3 = new Web3(web3.currentProvider);
+                    provider = web3.currentProvider;
+                    if (web3.currentProvider.isMetaMask) {
+                      console.log('Using MetaMask.');
+                    }
                 } else {
-                    console.log('No ethereum browser found, falling back to local node')
-                    // fallback
-                    web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+                    console.log('No ethereum browser found.')
                 }
+                console.log("Web3 version:", web3.version.api);
                
                 web3.version.getNetwork((err, netId) => {
                     switch (netId) {
                         case "1":
-                            console.log('This is mainnet')
+                            console.log('This is mainnet');
                             break
                         case "2":
-                            console.log('This is the deprecated Morden test network.')
+                            console.log('This is the deprecated Morden test network.');
                             break
                         case "3":
-                            console.log('This is the ropsten test network.')
+                            console.log('This is the ropsten test network.');
                             break
                         case "4":
-                            console.log('This is the Rinkeby test network.')
+                            console.log('This is the Rinkeby test network.');
                             break
                         case "42":
-                            console.log('This is the Kovan test network.')
+                            console.log('This is the Kovan test network.');
                             break
                         default:
-                            console.log('This is an unknown network.')
+                            console.log('This is an unknown network.');
                     }
-                })
-            })
+                });
+            });
         </script>
     </head>
 
@@ -49,22 +52,82 @@
 
         <div class="container">
 
-            <h1>Ethereum Plays Pokemon</h1>
+            <h1>Ethereum Plays Pokemon (with payment channels)</h1>
 
-            <p><input id='payment' placeholder=''> </input> microETH (optional, minimum 10 if set)</p>
+            <!-- This is the basic layout, shown by default -->
+            <div id='layout_basic' style='display: initial;'>
+              <p>
+                <input id='deposit_payment' value=0></input>
+                <input type=submit onclick="deposit(document.getElementById('deposit_payment').value); return false;" value="Deposit microETH"> (min 10)</input>
+              </p>
 
+              <p>
+                Remaining moves: <span id='remaining_moves'>0</span>
+              <p/>
+
+              <p>
+                <textarea id='signed_message' rows=5 cols=62 placeholder='signed message' readonly></textarea>
+                <button onclick="copyToClipboard();">Copy</button>
+              </p>
+
+              <p>
+                <input type=submit onclick="close_channel(document.getElementById('close_payment').value); return false;" value="Close channel"></input>
+                <input type=submit onclick="withdrawFunds(); return false;" value="Withdraw funds"> You have <span id='locked_balance'>0</span> microETH to withdraw. <span id='locked_balance_extra'></span></input>
+              </p>
+            </div>
+
+
+            <!-- This is the advanced layout, hidden by default -->
+            <div id='layout_advanced' style='display: none;'>
+              <p>
+                <input id='deposit_payment' value=0></input>
+                <input type=submit onclick="deposit(document.getElementById('deposit_payment').value); return false;" value="Deposit microETH"> (min 10)</input>
+              </p>
+
+              <p>
+                <input id='move_payment' value=0> Move payment (Channel capacity = <span id='channel_capacity'>0</span> microETH)</input>
+              <p/>
+
+              <p>
+                Payment channel ID (nonce): <span id='nonce'>open a channel by depositing ETH!</span>
+              </p>
+
+              <p>
+                <textarea id='signed_message' rows=5 cols=62 placeholder='signed message' readonly></textarea>
+                <button onclick="copyToClipboard();">Copy</button>
+              </p>
+
+              <p>
+                <input id='close_payment' value=0></input>
+                <input type=submit onclick="close_channel(document.getElementById('close_payment').value); return false;" value="Close channel"></input>
+              </p>
+
+              <p>
+                <input type=submit onclick="withdrawFunds(); return false;" value="Withdraw funds"> You have <span id='locked_balance'>0</span> microETH to withdraw. <span id='locked_balance_extra'></span></input>
+              </p>
+            </div>
+
+            <!-- Buttons -->
             <img src="gameboy_cropped.png" usemap="#gameboy-map">
 
             <map name="gameboy-map">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'up'); return false;" alt="up" title="up" coords="130,60,208,120" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'down'); return false;" alt="down" title="down" coords="130,185,208,245" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'left'); return false;" alt="left" title="left" coords="65,125,130,190" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'right'); return false;" alt="right" title="right" coords="200,125,260,190" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'a'); return false;" alt="a" title="a" coords="620,60,730,170" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'b'); return false;" alt="b" title="b" coords="490,120,600,230" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'select'); return false;" alt="select" title="select" coords="230,280,350,400" shape="rect">
-                <area href="#" onclick="press_button(document.getElementById('payment').value, 'start'); return false;" alt="start" title="start" coords="370,280,480,400" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'up'); return false;" alt="up" title="up" coords="130,60,208,120" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'down'); return false;" alt="down" title="down" coords="130,185,208,245" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'left'); return false;" alt="left" title="left" coords="65,125,130,190" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'right'); return false;" alt="right" title="right" coords="200,125,260,190" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'a'); return false;" alt="a" title="a" coords="620,60,730,170" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'b'); return false;" alt="b" title="b" coords="490,120,600,230" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'select'); return false;" alt="select" title="select" coords="230,280,350,400" shape="rect">
+                <area href="#" onclick="press_button(document.getElementById('move_payment').value, 'start'); return false;" alt="start" title="start" coords="370,280,480,400" shape="rect">
             </map>
+
+            <!-- Options -->
+            <p>
+              <input id='advanced' type='checkbox', onclick="setDisplayMode(document.getElementById('advanced').checked);"> Advanced mode. WARNING! DO NOT TOUCH THIS UNLESS YOU KNOW WHAT YOU'RE DOING!</input>
+            </p>
+            <p>
+              <button id='clear_cookie' onclick="clearCookie(); return false;"> Reset local data. WARNING! MAY RESULT IN LOSS OF FUNDS!</button>
+            <p>
 
         </div>
 
